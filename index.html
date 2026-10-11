@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>monoDown</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="panel">
+  <section class="block">
+    <label class="field-label" for="url">영상 URL</label>
+    <div class="row">
+      <input id="url" type="text" placeholder="https://www.youtube.com/watch?v=…" spellcheck="false" autocomplete="off">
+      <button id="btnInfo" class="btn ghost" title="영상 정보 불러오기">확인</button>
+    </div>
+  </section>
+
+  <section id="infoCard" class="info hidden" aria-live="polite">
+    <img id="thumb" alt="">
+    <div class="info-text">
+      <p id="title" class="info-title"></p>
+      <p id="meta" class="info-meta"></p>
+      <p id="maxq" class="info-badges"></p>
+    </div>
+  </section>
+
+  <section class="block">
+    <span class="field-label">화질 모드</span>
+    <div class="modes" role="radiogroup">
+      <label class="mode"><input type="radio" name="mode" value="compat" checked>
+        <span><b>바로 편집</b><small>H.264 최고 화질 (대개 1080p), 변환 없음</small></span></label>
+      <label class="mode"><input type="radio" name="mode" value="prores">
+        <span><b>최고 화질 → ProRes 422 HQ</b><small>4K/8K까지, 편집이 가장 부드러움, 용량 큼</small></span></label>
+      <label class="mode"><input type="radio" name="mode" value="h264">
+        <span><b>최고 화질 → H.264</b><small>4K/8K까지, 용량 작음, 변환 시간 김</small></span></label>
+      <label class="mode"><input type="radio" name="mode" value="original">
+        <span><b>최고 화질 원본</b><small>VP9/AV1 그대로 (프리미어에서 안 열릴 수 있음)</small></span></label>
+    </div>
+    <label class="check"><input type="checkbox" id="sdrOnly" checked> SDR만 받기 (HDR 색 틀어짐 방지)</label>
+    <label class="check"><input type="checkbox" id="keepSource"> 변환 후 원본 파일 남기기</label>
+    <label class="check"><input type="checkbox" id="autoImport" checked> 완료되면 프로젝트에 가져오기</label>
+  </section>
+
+  <section class="block">
+    <span class="field-label">저장 위치</span>
+    <div class="row">
+      <p id="outDir" class="path" title=""></p>
+      <button id="btnFolder" class="btn ghost">변경</button>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="row">
+      <button id="btnStart" class="btn primary">다운로드</button>
+      <button id="btnCancel" class="btn danger" disabled>취소</button>
+    </div>
+    <div class="track" aria-hidden="true">
+      <div id="fill" class="fill"></div>
+      <div id="playhead" class="playhead"></div>
+    </div>
+    <p id="status" class="status">대기 중</p>
+  </section>
+
+  <details class="block log-wrap">
+    <summary>로그</summary>
+    <pre id="log" class="log"></pre>
+  </details>
+
+  <details class="block log-wrap" id="settings">
+    <summary>업데이트 설정</summary>
+    <div class="settings">
+      <label class="field-label" for="repo">업데이트 받을 GitHub 저장소 (아이디/저장소)</label>
+      <div class="row">
+        <input id="repo" type="text" placeholder="myname/monodown" spellcheck="false" autocomplete="off">
+        <button id="btnRepoSave" class="btn ghost">저장</button>
+      </div>
+      <label class="check"><input type="checkbox" id="autoUpdate" checked> 패널을 열 때 자동으로 업데이트</label>
+    </div>
+  </details>
+
+  <footer class="foot">
+    <span class="foot-left">
+      <button id="btnCheckUpdate" class="link">업데이트 확인</button>
+      <button id="btnUpdate" class="link">yt-dlp 업데이트</button>
+    </span>
+    <span class="foot-right"><span id="version" class="tools"></span> <span id="toolState" class="tools"></span></span>
+  </footer>
+  <div id="updateBar" class="update-bar hidden" role="status"></div>
+</main>
+<script src="js/updater.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

@@ -236,6 +236,78 @@
   });
   el.url.addEventListener("keydown", function (e) { if (e.key === "Enter") el.btnInfo.click(); });
 
+  // ---------- 복사/붙여넣기 ----------
+  // 맥의 프리미어는 ⌘C/⌘V 키를 패널로 넘겨주지 않아서 붙여넣기가 안 된다.
+  // 1) 프리미어에 "이 키들은 패널이 쓴다"고 등록하고
+  // 2) 그래도 막히는 경우를 위해 시스템 클립보드를 직접 읽고 쓴다 (pbpaste / PowerShell).
+  (function registerEditKeys() {
+    var keys = IS_WIN
+      ? [65, 67, 86, 88, 90].map(function (k) { return { keyCode: k, ctrlKey: true }; })   // A C V X Z
+      : [0, 8, 9, 7, 6].map(function (k) { return { keyCode: k, metaKey: true }; });     // A C V X Z (맥 키코드)
+    try { window.__adobe_cep__.registerKeyEventsInterest(JSON.stringify(keys)); } catch (e) {}
+  })();
+
+  function readClipboard() {
+    return new Promise(function (resolve) {
+      var cmd = IS_WIN ? "powershell" : "pbpaste";
+      var args = IS_WIN ? ["-NoProfile", "-Command", "Get-Clipboard -Raw"] : [];
+      cp.execFile(cmd, args, { encoding: "utf8", windowsHide: true, env: Object.assign({}, process.env, { LANG: "en_US.UTF-8" }) },
+        function (err, out) { resolve(err ? "" : String(out || "")); });
+    });
+  }
+  function writeClipboard(text) {
+    try {
+      if (IS_WIN) {
+        var c = cp.spawn("powershell", ["-NoProfile", "-Command", "$input | Set-Clipboard"], { windowsHide: true });
+        c.stdin.end(text, "utf8");
+      } else {
+        var m = cp.spawn("pbcopy", [], { env: Object.assign({}, process.env, { LANG: "en_US.UTF-8" }) });
+        m.stdin.end(text, "utf8");
+      }
+    } catch (e) {}
+  }
+  function insertText(input, text) {
+    var a = input.selectionStart || 0, b = input.selectionEnd || 0;
+    input.value = input.value.slice(0, a) + text + input.value.slice(b);
+    var pos = a + text.length;
+    input.setSelectionRange(pos, pos);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function looksLikeUrl(t) { return /^https?:\/\/\S+$/i.test(t); }
+
+  function pasteInto(input) {
+    return readClipboard().then(function (t) {
+      t = t.replace(/[\r\n]+/g, " ").trim();
+      if (!t) { setStatus("클립보드가 비어 있습니다.", "err"); return; }
+      insertText(input, t);
+      // 영상 주소를 통째로 붙여넣었으면 바로 정보를 불러온다
+      if (input === el.url && looksLikeUrl(input.value.trim()) && !el.btnInfo.disabled) el.btnInfo.click();
+    });
+  }
+
+  // 모든 텍스트 입력창에서 ⌘/Ctrl + V·C·X·A 를 직접 처리
+  document.addEventListener("keydown", function (e) {
+    var t = e.target;
+    if (!t || t.tagName !== "INPUT" || t.type !== "text") return;
+    var mod = IS_WIN ? e.ctrlKey : e.metaKey;
+    if (!mod || e.altKey) return;
+    var k = (e.key || "").toLowerCase();
+    if (k === "v" || e.code === "KeyV") { e.preventDefault(); pasteInto(t); }
+    else if (k === "c" || e.code === "KeyC" || k === "x" || e.code === "KeyX") {
+      var sel = t.value.slice(t.selectionStart, t.selectionEnd);
+      if (!sel) return;
+      e.preventDefault();
+      writeClipboard(sel);
+      if (k === "x" || e.code === "KeyX") insertText(t, "");
+    } else if (k === "a" || e.code === "KeyA") { e.preventDefault(); t.select(); }
+  }, true);
+
+  $("btnPaste").addEventListener("click", function () {
+    el.url.value = "";
+    el.url.focus();
+    pasteInto(el.url);
+  });
+
   // ---------- 다운로드 ----------
   function formatSelector(mode, sdrOnly) {
     if (mode === "compat") {

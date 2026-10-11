@@ -7,7 +7,7 @@ DEST="$HOME/Library/Application Support/Adobe/CEP/extensions/monoDown"
 ARCH="$(uname -m)"   # arm64 또는 x86_64
 
 echo "▶ 1/4 서명 안 된 확장 허용 (PlayerDebugMode)"
-for v in 9 10 11 12 13; do
+for v in 9 10 11 12 13 14; do
   defaults write "com.adobe.CSXS.$v" PlayerDebugMode 1
 done
 
@@ -50,9 +50,12 @@ else
   chmod +x "$BIN/deno"
 fi
 
-# Gatekeeper 격리 속성 제거 (다운로드한 실행 파일이 차단되지 않도록)
-xattr -dr com.apple.quarantine "$BIN" 2>/dev/null || true
+# Gatekeeper 격리 속성 제거 (다운로드한 파일이 차단되지 않도록)
+xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true
 rm -rf "$TMP"
 
 echo ""
-echo "✅ 설치 완료. 프리미어 프로를 재시작한 뒤  창 > 확장 > monoDown  를 여세요."
+echo "✅ 설치 완료"
+echo "   1) 프리미어 프로를 완전히 종료(⌘Q)했다가 다시 실행하세요."
+echo "   2) 창 > 확장 > monoDown 을 여세요."
+echo "   이후 업데이트는 패널을 열 때 자동으로 적용됩니다."
